@@ -303,6 +303,7 @@ servedir(const char *server, const char *port, const char *path, const char *par
 		switch (v._type) {
 		case 'i': /* info */
 		case '3': /* error */
+			fputs(typestr(v._type), stdout);
 			fputs(" ", stdout);
 			xmlencode(v.username);
 			break;
