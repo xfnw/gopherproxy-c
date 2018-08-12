@@ -450,8 +450,8 @@ int
 main(void)
 {
 	struct uri u;
-	const char *p, *qs, *path;
-	char query[1024] = "", param[1024] = "", uri[1024] = "";
+	const char *p, *qs, *path, *uri;
+	char query[1024] = "", param[1024] = "";
 	int _type = '1';
 
 	if (pledge("stdio inet dns", NULL) == -1)
@@ -473,9 +473,9 @@ main(void)
 	path = "/";
 	if (query[0]) {
 		if (!strncmp(query, "gopher://", sizeof("gopher://") - 1))
-			snprintf(uri, sizeof(uri), "%s", query + sizeof("gopher://") - 1);
+			uri = query + sizeof("gopher://") - 1;
 		else
-			snprintf(uri, sizeof(uri), "%s", query);
+			uri = query;
 
 		if (!parseuri(uri, &u))
 			die(400, "Invalid uri: %s\n", uri);
