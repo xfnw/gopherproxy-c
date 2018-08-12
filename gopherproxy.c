@@ -317,6 +317,7 @@ servedir(const char *server, const char *port, const char *path, const char *par
 			fputs(
 				"\" name=\"p\" value=\"\" size=\"72\" />"
 				"<input type=\"submit\" value=\"Search\" /></pre></form><pre>", stdout);
+			break;
 		default: /* other */
 			fputs(typestr(v._type), stdout);
 			fputs(" <a href=\"", stdout);
