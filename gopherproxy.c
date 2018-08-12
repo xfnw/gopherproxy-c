@@ -19,7 +19,6 @@
 #endif
 
 struct uri {
-	char proto[16];
 	char host[256];
 	char port[8];
 	char path[1024];
@@ -294,29 +293,20 @@ servedir(const char *server, const char *port, const char *path, const char *par
 				server, port, path, linenr);
 		}
 
-		uri[0] = '\0';
-		switch (line[0]) {
-		case '7':
-			snprintf(uri, sizeof(uri), "gopher://%s:%s/%c%s",
+		if (!strcmp(v.port, "70"))
+			snprintf(uri, sizeof(uri), "%s/%c%s",
+				v.server, v._type, v.path);
+		else
+			snprintf(uri, sizeof(uri), "%s:%s/%c%s",
 				v.server, v.port, v._type, v.path);
-			break;
-		case 'h':
-			if (!strncmp(v.path, "URL:", sizeof("URL:") - 1))
-				snprintf(uri, sizeof(uri), "%s", v.path + sizeof("URL:") - 1);
-			else
-				snprintf(uri, sizeof(uri), "gopher://%s:%s/%c%s",
-					v.server, v.port, v._type, v.path);
-			break;
+
+		switch (v._type) {
 		case 'i': /* info */
 		case '3': /* error */
+			fputs(" ", stdout);
+			xmlencode(v.username);
 			break;
-		default:
-			snprintf(uri, sizeof(uri), "?q=gopher://%s:%s/%c%s",
-				v.server, v.port, v._type, v.path);
-		}
-
-		/* search */
-		if (v._type == '7') {
+		case '7': /* search */
 			fputs("</pre><form method=\"get\" action=\"\"><pre>", stdout);
 			fputs(typestr(v._type), stdout);
 			fputs(" <input type=\"hidden\" name=\"q\" value=\"", stdout);
@@ -326,18 +316,19 @@ servedir(const char *server, const char *port, const char *path, const char *par
 			fputs(
 				"\" name=\"p\" value=\"\" size=\"72\" />"
 				"<input type=\"submit\" value=\"Search\" /></pre></form><pre>", stdout);
-		} else {
+		default: /* other */
 			fputs(typestr(v._type), stdout);
-			if (uri[0]) {
-				fputs(" <a href=\"", stdout);
-				xmlencode(uri);
-				fputs("\">", stdout);
-				xmlencode(v.username);
-				fputs("</a>", stdout);
+			fputs(" <a href=\"", stdout);
+			if (v._type == 'h' && !strncmp(v.path, "URL:", sizeof("URL:") - 1)) {
+				xmlencode(v.path + sizeof("URL:") - 1);
 			} else {
-				fputs(" ", stdout);
-				xmlencode(v.username);
+				fputs("?q=", stdout);
+				xmlencode(uri);
 			}
+			fputs("\">", stdout);
+			xmlencode(v.username);
+			fputs("</a>", stdout);
+
 		}
 		putchar('\n');
 	}
@@ -422,21 +413,8 @@ parseuri(const char *str, struct uri *u)
 
 	memset(u, 0, sizeof(struct uri));
 
-	/* protocol part */
-	for (e = s = str; *e && (isalpha((int)*e) || isdigit((int)*e) ||
-	     *e == '+' || *e == '-' || *e == '.'); e++)
-		;
-	if (strncmp(e, "://", sizeof("://") - 1))
-		return 0;
-	if (e - s + 1 >= sizeof(u->proto))
-		return 0;
-	memcpy(u->proto, s, e - s);
-	u->proto[e - s] = '\0';
-
-	e += sizeof("://") - 1;
-	s = e;
-
-	e = &e[strcspn(s, ":/")];
+	s = str;
+	e = &s[strcspn(s, ":/")];
 	if (e - s + 1 >= sizeof(u->host))
 		return 0;
 	memcpy(u->host, s, e - s);
@@ -492,8 +470,8 @@ main(void)
 
 	path = "/";
 	if (query[0]) {
-		if (strncmp(query, "gopher://", sizeof("gopher://") - 1))
-			snprintf(uri, sizeof(uri), "gopher://%s", query);
+		if (!strncmp(query, "gopher://", sizeof("gopher://") - 1))
+			snprintf(uri, sizeof(uri), "%s", query + sizeof("gopher://") - 1);
 		else
 			snprintf(uri, sizeof(uri), "%s", query);
 
