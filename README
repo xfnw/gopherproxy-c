@@ -3,7 +3,7 @@ gopherproxy
 
 Build dependencies:
 - C compiler.
-- libc
+- libc + some BSD extensions (dprintf).
 - POSIX system.
 - make (optional).
 

@@ -502,19 +502,16 @@ main(void)
 		headerset = 1;
 		switch (_type) {
 		case '0':
-			printf("Content-Type: text/plain; charset=utf-8\r\n\r\n");
-			fflush(stdout);
+			dprintf(1, "Content-Type: text/plain; charset=utf-8\r\n\r\n");
 			servefile(u.host, u.port, path);
 			return 0;
 		case '1':
 		case '7':
 			break; /* handled below */
 		case '9':
-			printf("Content-Type: application/octet-stream\r\n");
 			if ((p = strrchr(path, '/')))
-				printf("Content-Disposition: attachment; filename=\"%s\"\r\n", p + 1);
-			printf("\r\n");
-			fflush(stdout);
+				dprintf(1, "Content-Disposition: attachment; filename=\"%s\"\r\n", p + 1);
+			dprintf(1, "Content-Type: application/octet-stream\r\n\r\n");
 			servefile(u.host, u.port, path);
 			return 0;
 		default:
@@ -524,10 +521,10 @@ main(void)
 		}
 	}
 
-	fputs("Content-Type: text/html; charset=utf-8\r\n\r\n", stdout);
 	headerset = 1;
-
 	fputs(
+		"Content-Type: text/html; charset=utf-8\r\n"
+		"\r\n"
 		"<!DOCTYPE html>\n"
 		"<html dir=\"ltr\">\n"
 		"<head>\n"
