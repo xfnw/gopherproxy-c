@@ -1,0 +1,17 @@
+gopherproxy
+===========
+
+Build dependencies:
+- C compiler.
+- libc
+- POSIX system.
+- make (optional).
+
+
+Features:
+- Works in older browsers such as links, lynx, w3m, dillo, etc.
+- No Javascript or CSS required.
+
+
+Cons:
+- Not all gopher types are supported.
