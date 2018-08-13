@@ -7,6 +7,8 @@ OBJ = $(BIN:=.o)
 #CFLAGS += -DUSE_PLEDGE
 # build static: useful in www chroot.
 #LDFLAGS += -static
+# Linux
+#CPPFLAGS += -D_DEFAULT_SOURCE
 
 all: $(BIN)
 
