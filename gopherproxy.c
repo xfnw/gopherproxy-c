@@ -97,7 +97,7 @@ dial(const char *host, const char *port)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_NUMERICSERV; /* numeric port only */
 	if ((error = getaddrinfo(host, port, &hints, &res0)))
-		die(500, "%s: %s: %s:%s", __func__, gai_strerror(error), host, port);
+		die(500, "%s: %s: %s:%s\n", __func__, gai_strerror(error), host, port);
 	s = -1;
 	for (res = res0; res; res = res->ai_next) {
 		s = socket(res->ai_family, res->ai_socktype,
