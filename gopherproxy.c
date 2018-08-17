@@ -526,14 +526,34 @@ main(void)
 
 		headerset = 1;
 		switch (_type) {
+		case '1':
+		case '7':
+			break; /* handled below */
 		case '0':
 			dprintf(1, "Content-Type: text/plain; charset=utf-8\r\n\r\n");
 			servefile(u.host, u.port, path);
 			return 0;
-		case '1':
-		case '7':
-			break; /* handled below */
+		case 'g':
+			dprintf(1, "Content-Type: image/gif\r\n\r\n");
+			servefile(u.host, u.port, path);
+			return 0;
+		case 'I':
+			/* try to set Content-Type based on extension */
+			if ((p = strrchr(path, '.'))) {
+				p++;
+				if (!strcasecmp("png", p)) {
+					dprintf(1, "Content-Type: image/png\r\n");
+				} else if (!strcasecmp("jpg", p) || !strcasecmp("jpeg", p)) {
+					dprintf(1, "Content-Type: image/jpeg\r\n");
+				} else if (!strcasecmp("gif", p)) {
+					dprintf(1, "Content-Type: image/gif\r\n");
+				}
+			}
+			write(1, "\r\n", 2);
+			servefile(u.host, u.port, path);
+			return 0;
 		case '9':
+			/* try to detect filename */
 			if ((p = strrchr(path, '/')))
 				dprintf(1, "Content-Disposition: attachment; filename=\"%s\"\r\n", p + 1);
 			dprintf(1, "Content-Type: application/octet-stream\r\n\r\n");
