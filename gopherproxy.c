@@ -558,13 +558,12 @@ main(void)
 			/* try to set Content-Type based on extension */
 			if ((p = strrchr(path, '.'))) {
 				p++;
-				if (!strcasecmp("png", p)) {
+				if (!strcasecmp("png", p))
 					dprintf(1, "Content-Type: image/png\r\n");
-				} else if (!strcasecmp("jpg", p) || !strcasecmp("jpeg", p)) {
+				else if (!strcasecmp("jpg", p) || !strcasecmp("jpeg", p))
 					dprintf(1, "Content-Type: image/jpeg\r\n");
-				} else if (!strcasecmp("gif", p)) {
+				else if (!strcasecmp("gif", p))
 					dprintf(1, "Content-Type: image/gif\r\n");
-				}
 			}
 			write(1, "\r\n", 2);
 			servefile(u.host, u.port, path);
