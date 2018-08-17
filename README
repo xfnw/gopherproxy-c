@@ -24,6 +24,28 @@ Cons
 - Not all gopher types are supported.
 
 
+CGI configuration examples
+--------------------------
+
+Mginx + slowcgi:
+
+	location /gopherproxy/ {
+		include /etc/nginx/fastcgi_params;
+		fastcgi_pass unix:/run/slowcgi.sock;
+		fastcgi_param SCRIPT_FILENAME /cgi-bin/gopherproxy.cgi;
+		fastcgi_param SCRIPT_NAME     /cgi-bin/gopherproxy.cgi;
+		fastcgi_param REQUEST_URI     /cgi-bin/gopherproxy.cgi;
+	}
+
+
+OpenBSD httpd + slowcgi:
+
+	location "/gopherproxy" {
+		root "/cgi-bin/gopherproxy.cgi"
+		fastcgi
+	}
+
+
 Notes
 -----
 
