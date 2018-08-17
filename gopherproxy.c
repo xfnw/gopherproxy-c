@@ -145,14 +145,26 @@ typestr(int c)
 	switch (c) {
 	case '0': return "  TEXT";
 	case '1': return "   DIR";
+	case '2': return "   CSO";
+	case '3': return "   ERR";
+	case '4': return "   MAC";
+	case '5': return "   DOS";
+	case '6': return " UUENC";
 	case '7': return "SEARCH";
+	case '8': return "TELNET";
 	case '9': return "   BIN";
 	case 'g': return "   GIF";
 	case 'h': return "  HTML"; /* non-standard */
 	case 's': return "   SND"; /* non-standard */
-	case 'A': return " AUDIO"; /* non-standard */
+	case '+': return "MIRROR";
 	case 'I': return "   IMG";
-	default:  return "      ";
+	case 'T': return "TN3270";
+	default:
+		/* "Characters '0' through 'Z' are reserved." (ASCII) */
+		if (c >= '0' && c <= 'Z')
+			return "RESERV";
+		else
+			return "      ";
 	}
 }
 
