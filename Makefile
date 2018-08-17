@@ -6,7 +6,7 @@ OBJ = $(BIN:=.o)
 # OpenBSD: use pledge(2).
 #CFLAGS += -DUSE_PLEDGE
 # build static: useful in www chroot.
-#LDFLAGS += -static
+LDFLAGS += -static
 # Linux
 #CPPFLAGS += -D_DEFAULT_SOURCE
 
