@@ -1,17 +1,71 @@
 gopherproxy
 ===========
 
-Build dependencies:
+Build dependencies
+------------------
+
 - C compiler.
 - libc + some BSD extensions (dprintf).
 - POSIX system.
 - make (optional).
 
 
-Features:
+Features
+--------
+
 - Works in older browsers such as links, lynx, w3m, dillo, etc.
 - No Javascript or CSS required.
 
 
-Cons:
+Cons
+----
+
 - Not all gopher types are supported.
+
+
+Notes
+-----
+
+When using nginx 1.12+ with OpenBSD slowcgi there may be buffering issues. This
+is a bug in nginx. This bug is fixed in newer nginx versions (see patch below).
+
+Workaround:
+	# workaround fastcgi buffering bug in nginx (fixed in 1.14).
+	fastcgi_buffering off;
+
+Patch:
+
+commit cfc8c28259b3fd59f2517ac4830a08e8a9925148
+Author: Maxim Dounin <mdounin@mdounin.ru>
+Date:   Thu Nov 9 15:35:20 2017 +0300
+
+    FastCGI: adjust buffer position when parsing incomplete records.
+    
+    Previously, nginx failed to move buffer position when parsing an incomplete
+    record header, and due to this wasn't be able to continue parsing once
+    remaining bytes of the record header were received.
+    
+    This can affect response header parsing, potentially generating spurious errors
+    like "upstream sent unexpected FastCGI request id high byte: 1 while reading
+    response header from upstream".  While this is very unlikely, since usually
+    record headers are written in a single buffer, this still can happen in real
+    life, for example, if a record header will be split across two TCP packets
+    and the second packet will be delayed.
+    
+    This does not affect non-buffered response body proxying, due to "buf->pos =
+    buf->last;" at the start of the ngx_http_fastcgi_non_buffered_filter()
+    function.  Also this does not affect buffered response body proxying, as
+    each input buffer is only passed to the filter once.
+
+diff --git a/src/http/modules/ngx_http_fastcgi_module.c b/src/http/modules/ngx_http_fastcgi_module.c
+index ea16ecae..b4bb1d0a 100644
+--- a/src/http/modules/ngx_http_fastcgi_module.c
++++ b/src/http/modules/ngx_http_fastcgi_module.c
+@@ -2646,6 +2646,7 @@ ngx_http_fastcgi_process_record(ngx_http_request_t *r,
+         }
+     }
+ 
++    f->pos = p;
+     f->state = state;
+ 
+     return NGX_AGAIN;
