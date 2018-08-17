@@ -15,5 +15,7 @@ all: $(BIN)
 $(BIN): $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) -o $@
 
+$(OBJ): Makefile
+
 clean:
 	rm -f $(BIN) $(OBJ)
