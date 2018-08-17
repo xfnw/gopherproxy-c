@@ -134,6 +134,10 @@ isblacklisted(const char *host, const char *port, const char *path)
 {
 	char *p;
 
+	if (path[0] != '/')
+		return 1;
+	if (strcmp(port, "70") && strcmp(port, "7070"))
+		return 1;
 	if ((p = strstr(host, ".onion")) && strlen(p) == strlen(".onion"))
 		return 1;
 	return 0;
