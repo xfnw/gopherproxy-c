@@ -333,8 +333,10 @@ servedir(const char *server, const char *port, const char *path, const char *par
 		case 'T': /* tn3270 */
 			fputs(typestr(v._type), stdout);
 			printf(" <a href=\"%s://", v._type == '8' ? "telnet" : "tn3270");
-			xmlencode(v.path);
-			fputs("@", stdout);
+			if (v.path[0]) {
+				xmlencode(v.path);
+				fputs("@", stdout);
+			}
 			xmlencode(v.server);
 			fputs(":", stdout);
 			xmlencode(v.port);
