@@ -446,15 +446,26 @@ parseuri(const char *str, struct uri *u)
 	memset(u, 0, sizeof(struct uri));
 
 	s = str;
-	e = &s[strcspn(s, ":/")];
-	if (e - s + 1 >= sizeof(u->host))
-		return 0;
-	memcpy(u->host, s, e - s);
-	u->host[e - s] = '\0';
+
+	/* IPv6 */
+	if (*s == '[') {
+		s++;
+		e = strchr(s, ']');
+		if (!e || e - s + 1 >= sizeof(u->host))
+			return 0;
+		memcpy(u->host, s, e - s);
+		u->host[e - s] = '\0';
+		e++;
+	} else {
+		e = &s[strcspn(s, ":/")];
+		if (e - s + 1 >= sizeof(u->host))
+			return 0;
+		memcpy(u->host, s, e - s);
+		u->host[e - s] = '\0';
+	}
 
 	if (*e == ':') {
-		s = ++e;
-
+		s = e + 1;
 		e = &s[strcspn(s, "/")];
 
 		if (e - s + 1 >= sizeof(u->port))
