@@ -329,6 +329,19 @@ servedir(const char *server, const char *port, const char *path, const char *par
 				"\" name=\"p\" value=\"\" size=\"72\" />"
 				"<input type=\"submit\" value=\"Search\" /></pre></form><pre>", stdout);
 			break;
+		case '8': /* telnet */
+		case 'T': /* tn3270 */
+			fputs(typestr(v._type), stdout);
+			printf(" <a href=\"%s://", v._type == '8' ? "telnet" : "tn3270");
+			xmlencode(v.path);
+			fputs("@", stdout);
+			xmlencode(v.server);
+			fputs(":", stdout);
+			xmlencode(v.port);
+			fputs("\">", stdout);
+			xmlencode(v.username);
+			fputs("</a>", stdout);
+			break;
 		default: /* other */
 			fputs(typestr(v._type), stdout);
 			fputs(" <a href=\"", stdout);
