@@ -168,8 +168,7 @@ servefile(const char *server, const char *port, const char *path)
 	if (pledge("stdio", NULL) == -1)
 		die(500, "pledge: %s\n", strerror(errno));
 
-	w = dprintf(fd, "%s\r\n", path);
-	if (w == -1)
+	if ((w = dprintf(fd, "%s\r\n", path)) == -1)
 		die(500, "dprintf: %s\n", strerror(errno));
 
 	while ((r = read(fd, buf, sizeof(buf))) > 0) {
@@ -450,7 +449,7 @@ int
 main(void)
 {
 	struct uri u;
-	const char *p, *qs, *path, *uri;
+	const char *p, *qs, *path, *uri = "";
 	char query[1024] = "", param[1024] = "";
 	int _type = '1';
 
