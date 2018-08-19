@@ -27,7 +27,7 @@ Cons
 CGI configuration examples
 --------------------------
 
-Mginx + slowcgi:
+nginx + slowcgi:
 
 	location /gopherproxy/ {
 		include /etc/nginx/fastcgi_params;
