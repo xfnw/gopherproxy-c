@@ -27,7 +27,7 @@ Cons
 CGI configuration examples
 --------------------------
 
-nginx + slowcgi:
+Nginx + slowcgi:
 
 	location /gopherproxy/ {
 		include /etc/nginx/fastcgi_params;
@@ -54,6 +54,15 @@ Caddy + http.cgi:
 
 Notes
 -----
+
+Tor support:
+
+To accept tor gopher browsing, remove the -static flag from LDFLAGS in the
+Makefile and modify the isblacklisted() function in gopherproxy.c to allow
+.onion addresses.
+
+
+Nginx buffering issues:
 
 When using nginx 1.12+ with OpenBSD slowcgi there may be buffering issues. This
 is a bug in nginx. This bug is fixed in newer nginx versions (see patch below).
