@@ -45,6 +45,12 @@ OpenBSD httpd + slowcgi:
 		fastcgi
 	}
 
+Caddy + http.cgi:
+
+	proxy.domain.tld {
+		cgi /proxy /usr/local/bin/gopherproxy
+	}
+
 
 Notes
 -----
