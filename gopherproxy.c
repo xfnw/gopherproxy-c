@@ -32,7 +32,7 @@ struct visited {
 	char port[8];
 };
 
-int headerset = 0;
+int headerset = 0, isdir = 0;
 
 void
 die(int code, const char *fmt, ...)
@@ -61,6 +61,9 @@ die(int code, const char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(stdout, fmt, ap);
 	va_end(ap);
+
+	if (isdir)
+		fputs("</pre>\n</body>\n</html>\n", stdout);
 
 	exit(1);
 }
@@ -581,7 +584,7 @@ main(void)
 		}
 	}
 
-	headerset = 1;
+	headerset = isdir = 1;
 	fputs(
 		"Content-Type: text/html; charset=utf-8\r\n"
 		"\r\n"
