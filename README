@@ -57,9 +57,14 @@ Notes
 
 Tor support:
 
-To accept tor gopher browsing, remove the -static flag from LDFLAGS in the
-Makefile and modify the isblacklisted() function in gopherproxy.c to allow
-.onion addresses.
+Modify the isblacklisted() function in gopherproxy.c to allow .onion addresses.
+
+
+torsocks support:
+
+To accept torsocks with gopherproxy, remove the -static flag from LDFLAGS in
+the Makefile. This is because torsocks is a shared library and "hooks into" the
+network calls.
 
 
 Nginx buffering issues:
