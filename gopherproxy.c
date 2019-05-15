@@ -85,15 +85,12 @@ xmlencode(const char *s)
 }
 
 int
-dial(const char *host, const char *port)
+edial(const char *host, const char *port)
 {
 	struct addrinfo hints, *res, *res0;
 	int error, save_errno, s;
 	const char *cause = NULL;
-	struct timeval timeout = {
-		.tv_sec = MAX_RESPONSETIMEOUT,
-		.tv_usec = 0,
-	};
+	struct timeval timeout;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
@@ -110,8 +107,13 @@ dial(const char *host, const char *port)
 			continue;
 		}
 
+		timeout.tv_sec = MAX_RESPONSETIMEOUT;
+		timeout.tv_usec = 0;
 		if (setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) == -1)
 			die(500, "%s: setsockopt: %s\n", __func__, strerror(errno));
+
+		timeout.tv_sec = MAX_RESPONSETIMEOUT;
+		timeout.tv_usec = 0;
 		if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) == -1)
 			die(500, "%s: setsockopt: %s\n", __func__, strerror(errno));
 
@@ -180,7 +182,7 @@ servefile(const char *server, const char *port, const char *path)
 	int r, w, fd;
 	size_t totalsiz = 0;
 
-	fd = dial(server, port);
+	fd = edial(server, port);
 
 	if (pledge("stdio", NULL) == -1)
 		die(500, "pledge: %s\n", strerror(errno));
@@ -214,7 +216,7 @@ servedir(const char *server, const char *port, const char *path, const char *par
 	ssize_t n;
 	int fd, r, i, len;
 
-	fd = dial(server, port);
+	fd = edial(server, port);
 
 	if (pledge("stdio", NULL) == -1)
 		die(500, "pledge: %s\n", strerror(errno));
