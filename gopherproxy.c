@@ -14,7 +14,7 @@
 #define MAX_RESPONSETIMEOUT 10      /* timeout in seconds */
 #define MAX_RESPONSESIZ     4000000 /* max download size in bytes */
 
-#ifndef USE_PLEDGE
+#ifndef __OpenBSD__
 #define pledge(a,b) 0
 #endif
 
