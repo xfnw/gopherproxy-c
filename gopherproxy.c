@@ -211,7 +211,7 @@ servedir(const char *server, const char *port, const char *path, const char *par
 {
 	struct visited v;
 	FILE *fp;
-	char line[1024], uri[1024];
+	char line[1024], uri[1024], primarytype;
 	size_t totalsiz, linenr;
 	ssize_t n;
 	int fd, r, i, len;
@@ -232,6 +232,7 @@ servedir(const char *server, const char *port, const char *path, const char *par
 		die(500, "fdopen: %s\n", strerror(errno));
 
 	totalsiz = 0;
+	primarytype = '\0';
 	for (linenr = 1; fgets(line, sizeof(line), fp); linenr++) {
 		n = strcspn(line, "\n");
 		if (line[n] != '\n')
@@ -254,6 +255,11 @@ servedir(const char *server, const char *port, const char *path, const char *par
 		memset(&v, 0, sizeof(v));
 
 		v._type = line[0];
+		if (v._type != '+')
+			primarytype = v._type;
+		else if (!primarytype)
+			die(500, "%s:%s %s:%d: undefined primary server\n",
+				server, port, path, linenr);
 
 		/* "username" */
 		i = 1;
@@ -313,12 +319,12 @@ servedir(const char *server, const char *port, const char *path, const char *par
 
 		if (!strcmp(v.port, "70"))
 			snprintf(uri, sizeof(uri), "%s/%c%s",
-				v.server, v._type, v.path);
+				v.server, primarytype, v.path);
 		else
 			snprintf(uri, sizeof(uri), "%s:%s/%c%s",
-				v.server, v.port, v._type, v.path);
+				v.server, v.port, primarytype, v.path);
 
-		switch (v._type) {
+		switch (primarytype) {
 		case 'i': /* info */
 		case '3': /* error */
 			fputs(typestr(v._type), stdout);
@@ -339,7 +345,7 @@ servedir(const char *server, const char *port, const char *path, const char *par
 		case '8': /* telnet */
 		case 'T': /* tn3270 */
 			fputs(typestr(v._type), stdout);
-			printf(" <a href=\"%s://", v._type == '8' ? "telnet" : "tn3270");
+			printf(" <a href=\"%s://", primarytype == '8' ? "telnet" : "tn3270");
 			if (v.path[0]) {
 				xmlencode(v.path);
 				fputs("@", stdout);
@@ -354,7 +360,7 @@ servedir(const char *server, const char *port, const char *path, const char *par
 		default: /* other */
 			fputs(typestr(v._type), stdout);
 			fputs(" <a href=\"", stdout);
-			if (v._type == 'h' && !strncmp(v.path, "URL:", sizeof("URL:") - 1)) {
+			if (primarytype == 'h' && !strncmp(v.path, "URL:", sizeof("URL:") - 1)) {
 				xmlencode(v.path + sizeof("URL:") - 1);
 			} else {
 				fputs("?q=", stdout);
