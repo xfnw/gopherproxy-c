@@ -55,6 +55,13 @@ Caddy + http.cgi:
 Notes
 -----
 
+Restrictions:
+
+For security reasons, only port 70 and 7070 are accepted as valid gopher ports.
+Furthermore there is a connection time limit and download size limit. See the
+source-code for more information.
+
+
 Tor support:
 
 Modify the isblacklisted() function in gopherproxy.c to allow .onion addresses.
