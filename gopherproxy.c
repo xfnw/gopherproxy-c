@@ -606,8 +606,10 @@ main(void)
 		fputs(" - ", stdout);
 	fputs(
 		"Gopher HTTP proxy</title>\n"
-		"<style type=\"text/css\">a { text-decoration: none; } "
-		"a:hover { text-decoration: underline; }</style>\n"
+		"<style type=\"text/css\">\n"
+		"a { text-decoration: none; } a:hover { text-decoration: underline; }\n"
+		"@media (prefers-color-scheme: dark) { body { background-color: #000; color: #bdbdbd; } a { color: #bdbdbd; } }\n"
+		"</style>\n"
 		"<meta name=\"robots\" content=\"noindex, nofollow\" />\n"
 		"<meta name=\"robots\" content=\"none\" />\n"
 		"<meta content=\"width=device-width\" name=\"viewport\" />\n"
