@@ -18,10 +18,15 @@
 #define pledge(a,b) 0
 #endif
 
+/* URI */
 struct uri {
+	char proto[48];     /* scheme including ":" or "://" */
+	char userinfo[256]; /* username [:password] */
 	char host[256];
-	char port[8];
+	char port[6];       /* numeric port */
 	char path[1024];
+	char query[1024];
+	char fragment[1024];
 };
 
 struct visited {
@@ -447,53 +452,130 @@ checkparam(const char *s)
 	return 1;
 }
 
+/* check if string has a non-empty scheme / protocol part */
 int
-parseuri(const char *str, struct uri *u)
+uri_hasscheme(const char *s)
 {
-	const char *s, *e;
+	const char *p = s;
 
-	memset(u, 0, sizeof(struct uri));
+	for (; isalpha((unsigned char)*p) || isdigit((unsigned char)*p) ||
+		       *p == '+' || *p == '-' || *p == '.'; p++)
+		;
+	/* scheme, except if empty and starts with ":" then it is a path */
+	return (*p == ':' && p != s);
+}
 
-	s = str;
+int
+uri_parse(const char *s, struct uri *u)
+{
+	const char *p = s;
+	char *endptr;
+	size_t i;
+	long l;
 
-	/* IPv6 */
-	if (*s == '[') {
-		s++;
-		e = strchr(s, ']');
-		if (!e || e - s + 1 >= sizeof(u->host))
-			return 0;
-		memcpy(u->host, s, e - s);
-		u->host[e - s] = '\0';
-		e++;
+	u->proto[0] = u->userinfo[0] = u->host[0] = u->port[0] = '\0';
+	u->path[0] = u->query[0] = u->fragment[0] = '\0';
+
+	/* protocol-relative */
+	if (*p == '/' && *(p + 1) == '/') {
+		p += 2; /* skip "//" */
+		goto parseauth;
+	}
+
+	/* scheme / protocol part */
+	for (; isalpha((unsigned char)*p) || isdigit((unsigned char)*p) ||
+		       *p == '+' || *p == '-' || *p == '.'; p++)
+		;
+	/* scheme, except if empty and starts with ":" then it is a path */
+	if (*p == ':' && p != s) {
+		if (*(p + 1) == '/' && *(p + 2) == '/')
+			p += 3; /* skip "://" */
+		else
+			p++; /* skip ":" */
+
+		if ((size_t)(p - s) >= sizeof(u->proto))
+			return -1; /* protocol too long */
+		memcpy(u->proto, s, p - s);
+		u->proto[p - s] = '\0';
+
+		if (*(p - 1) != '/')
+			goto parsepath;
 	} else {
-		e = &s[strcspn(s, ":/")];
-		if (e - s + 1 >= sizeof(u->host))
-			return 0;
-		memcpy(u->host, s, e - s);
-		u->host[e - s] = '\0';
+		p = s; /* no scheme format, reset to start */
+		goto parsepath;
 	}
 
-	if (*e == ':') {
-		s = e + 1;
-		e = &s[strcspn(s, "/")];
-
-		if (e - s + 1 >= sizeof(u->port))
-			return 0;
-		memcpy(u->port, s, e - s);
-		u->port[e - s] = '\0';
+parseauth:
+	/* userinfo (username:password) */
+	i = strcspn(p, "@/?#");
+	if (p[i] == '@') {
+		if (i >= sizeof(u->userinfo))
+			return -1; /* userinfo too long */
+		memcpy(u->userinfo, p, i);
+		u->userinfo[i] = '\0';
+		p += i + 1;
 	}
-	if (*e && *e != '/')
-		return 0; /* invalid path */
 
-	s = e;
-	e = s + strlen(s);
+	/* IPv6 address */
+	if (*p == '[') {
+		/* bracket not found, host too short or too long */
+		i = strcspn(p, "]");
+		if (p[i] != ']' || i < 3)
+			return -1;
+		i++; /* including "]" */
+	} else {
+		/* domain / host part, skip until port, path or end. */
+		i = strcspn(p, ":/?#");
+	}
+	if (i >= sizeof(u->host))
+		return -1; /* host too long */
+	memcpy(u->host, p, i);
+	u->host[i] = '\0';
+	p += i;
 
-	if (e - s + 1 >= sizeof(u->path))
-		return 0;
-	memcpy(u->path, s, e - s);
-	u->path[e - s] = '\0';
+	/* port */
+	if (*p == ':') {
+		p++;
+		if ((i = strcspn(p, "/?#")) >= sizeof(u->port))
+			return -1; /* port too long */
+		memcpy(u->port, p, i);
+		u->port[i] = '\0';
+		/* check for valid port: range 1 - 65535, may be empty */
+		errno = 0;
+		l = strtol(u->port, &endptr, 10);
+		if (i && (errno || *endptr || l <= 0 || l > 65535))
+			return -1;
+		p += i;
+	}
 
-	return 1;
+parsepath:
+	/* path */
+	if ((i = strcspn(p, "?#")) >= sizeof(u->path))
+		return -1; /* path too long */
+	memcpy(u->path, p, i);
+	u->path[i] = '\0';
+	p += i;
+
+	/* query */
+	if (*p == '?') {
+		p++;
+		if ((i = strcspn(p, "#")) >= sizeof(u->query))
+			return -1; /* query too long */
+		memcpy(u->query, p, i);
+		u->query[i] = '\0';
+		p += i;
+	}
+
+	/* fragment */
+	if (*p == '#') {
+		p++;
+		if ((i = strlen(p)) >= sizeof(u->fragment))
+			return -1; /* fragment too long */
+		memcpy(u->fragment, p, i);
+		u->fragment[i] = '\0';
+	}
+
+	return 0;
 }
 
 int
@@ -527,7 +609,8 @@ main(void)
 		else
 			uri = query;
 
-		if (!parseuri(uri, &u))
+		if (!uri_hasscheme(uri) ||
+		    uri_parse(uri, &u) == -1)
 			die(400, "Invalid uri: %s\n", uri);
 		if (u.host[0] == '\0')
 			die(400, "Invalid hostname\n");
