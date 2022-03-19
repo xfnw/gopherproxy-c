@@ -452,7 +452,7 @@ checkparam(const char *s)
 	return 1;
 }
 
-/* check if string has a non-empty scheme / protocol part */
+/* Check if string has a non-empty scheme / protocol part. */
 int
 uri_hasscheme(const char *s)
 {
@@ -465,6 +465,8 @@ uri_hasscheme(const char *s)
 	return (*p == ':' && p != s);
 }
 
+/* Parse URI string `s` into an uri structure `u`.
+   Returns 0 on success or -1 on failure */
 int
 uri_parse(const char *s, struct uri *u)
 {
@@ -582,9 +584,9 @@ int
 main(void)
 {
 	struct uri u;
-	const char *p, *qs, *path, *uri = "";
-	char query[1024] = "", param[1024] = "";
-	int _type = '1';
+	const char *p, *qs, *path, *showuri = "";
+	char query[1024] = "", param[1024] = "", fulluri[4096];
+	int r, _type = '1';
 
 	if (pledge("stdio inet dns", NULL) == -1)
 		die(500, "pledge: %s\n", strerror(errno));
@@ -604,14 +606,21 @@ main(void)
 
 	path = "/";
 	if (query[0]) {
-		if (!strncmp(query, "gopher://", sizeof("gopher://") - 1))
-			uri = query + sizeof("gopher://") - 1;
-		else
-			uri = query;
+		if (!strncmp(query, "gopher://", sizeof("gopher://") - 1)) {
+			showuri = query + sizeof("gopher://") - 1;
+			r = snprintf(fulluri, sizeof(fulluri), "%s", query);
+		} else {
+			showuri = query;
+			r = snprintf(fulluri, sizeof(fulluri), "gopher://%s", query);
+		}
+		if (r < 0 || (size_t)r >= sizeof(fulluri))
+			die(400, "invalid URI: too long\n");
 
-		if (!uri_hasscheme(uri) ||
-		    uri_parse(uri, &u) == -1)
-			die(400, "Invalid uri: %s\n", uri);
+		if (!uri_hasscheme(fulluri) ||
+		    uri_parse(fulluri, &u) == -1)
+			die(400, "Invalid or unsupported URI: %s\n", showuri);
+		if (strcmp(u.proto, "gopher://"))
+			die(400, "Invalid protocol: only gopher is supported\n");
 		if (u.host[0] == '\0')
 			die(400, "Invalid hostname\n");
 
@@ -700,7 +709,7 @@ main(void)
 		"<body>\n"
 		"<form method=\"get\" action=\"\"><pre>"
 		"  URI: <input type=\"search\" name=\"q\" value=\"", stdout);
-	xmlencode(uri);
+	xmlencode(showuri);
 	fputs(
 		"\" placeholder=\"URI...\" size=\"72\" autofocus=\"autofocus\" class=\"search\" />"
 		"<input type=\"submit\" value=\"Go for it!\" /></pre>"
