@@ -700,7 +700,7 @@ main(void)
 		"Gopher HTTP proxy</title>\n"
 		"<style type=\"text/css\">\n"
 		"a { text-decoration: none; } a:hover { text-decoration: underline; }\n"
-		"@media (prefers-color-scheme: dark) { body { background-color: #000; color: #bdbdbd; } a { color: #bdbdbd; } }\n"
+		"@media (prefers-color-scheme: dark) { body { background-color: #000; color: #bdbdbd; } a { color: #56c8ff; } }\n"
 		"</style>\n"
 		"<meta name=\"robots\" content=\"noindex, nofollow\" />\n"
 		"<meta name=\"robots\" content=\"none\" />\n"
