@@ -611,6 +611,8 @@ main(void)
 			r = snprintf(fulluri, sizeof(fulluri), "%s", query);
 		} else {
 			showuri = query;
+			if (uri_hasscheme(query))
+				die(400, "Invalid protocol: only gopher is supported\n");
 			r = snprintf(fulluri, sizeof(fulluri), "gopher://%s", query);
 		}
 		if (r < 0 || (size_t)r >= sizeof(fulluri))
@@ -619,6 +621,7 @@ main(void)
 		if (!uri_hasscheme(fulluri) ||
 		    uri_parse(fulluri, &u) == -1)
 			die(400, "Invalid or unsupported URI: %s\n", showuri);
+
 		if (strcmp(u.proto, "gopher://"))
 			die(400, "Invalid protocol: only gopher is supported\n");
 		if (u.host[0] == '\0')
