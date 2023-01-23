@@ -591,6 +591,9 @@ main(void)
 	if (pledge("stdio inet dns", NULL) == -1)
 		die(500, "pledge: %s\n", strerror(errno));
 
+	if ((path = getenv("PATH_INFO")) && !strcmp("/robots.txt", path))
+		die(200, "User-agent: *\nDisallow: /\n");
+
 	if (!(qs = getenv("QUERY_STRING")))
 		qs = "";
 	if ((p = getparam(qs, "q"))) {
