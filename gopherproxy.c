@@ -181,7 +181,7 @@ typestr(int c)
 }
 
 void
-servefile(const char *server, const char *port, const char *path)
+servefile(const char *server, const char *port, const char *path, const char *query)
 {
 	char buf[1024];
 	int r, w, fd;
@@ -192,7 +192,7 @@ servefile(const char *server, const char *port, const char *path)
 	if (pledge("stdio", NULL) == -1)
 		die(500, "pledge: %s\n", strerror(errno));
 
-	if ((w = dprintf(fd, "%s\r\n", path)) == -1)
+	if ((w = dprintf(fd, "%s%s%s\r\n", path, query[0] ? "?" : "", query)) == -1)
 		die(500, "dprintf: %s\n", strerror(errno));
 
 	while ((r = read(fd, buf, sizeof(buf))) > 0) {
@@ -212,7 +212,7 @@ servefile(const char *server, const char *port, const char *path)
 }
 
 void
-servedir(const char *server, const char *port, const char *path, const char *param)
+servedir(const char *server, const char *port, const char *path, const char *query, const char *param)
 {
 	struct visited v;
 	FILE *fp;
@@ -227,9 +227,9 @@ servedir(const char *server, const char *port, const char *path, const char *par
 		die(500, "pledge: %s\n", strerror(errno));
 
 	if (param[0])
-		r = dprintf(fd, "%s\t%s\r\n", path, param);
+		r = dprintf(fd, "%s%s%s\t%s\r\n", path, query[0] ? "?" : "", query, param);
 	else
-		r = dprintf(fd, "%s\r\n", path);
+		r = dprintf(fd, "%s%s%s\r\n", path, query[0] ? "?" : "", query);
 	if (r == -1)
 		die(500, "write: %s\n", strerror(errno));
 
@@ -656,11 +656,11 @@ main(void)
 			break; /* handled below */
 		case '0':
 			dprintf(1, "Content-Type: text/plain; charset=utf-8\r\n\r\n");
-			servefile(u.host, u.port, path);
+			servefile(u.host, u.port, path, u.query);
 			return 0;
 		case 'g':
 			dprintf(1, "Content-Type: image/gif\r\n\r\n");
-			servefile(u.host, u.port, path);
+			servefile(u.host, u.port, path, u.query);
 			return 0;
 		case 'I':
 			/* try to set Content-Type based on extension */
@@ -674,18 +674,18 @@ main(void)
 					dprintf(1, "Content-Type: image/gif\r\n");
 			}
 			write(1, "\r\n", 2);
-			servefile(u.host, u.port, path);
+			servefile(u.host, u.port, path, u.query);
 			return 0;
 		case '9':
 			/* try to detect filename */
 			if ((p = strrchr(path, '/')))
 				dprintf(1, "Content-Disposition: attachment; filename=\"%s\"\r\n", p + 1);
 			dprintf(1, "Content-Type: application/octet-stream\r\n\r\n");
-			servefile(u.host, u.port, path);
+			servefile(u.host, u.port, path, u.query);
 			return 0;
 		default:
 			write(1, "\r\n", 2);
-			servefile(u.host, u.port, path);
+			servefile(u.host, u.port, path, u.query);
 			return 0;
 		}
 	}
@@ -724,7 +724,7 @@ main(void)
 	if (query[0]) {
 		if (_type != '7')
 			param[0] = '\0';
-		servedir(u.host, u.port, path, param);
+		servedir(u.host, u.port, path, u.query, param);
 	}
 
 	fputs("</pre>\n</body>\n</html>\n", stdout);
