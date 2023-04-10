@@ -165,9 +165,11 @@ typestr(int c)
 	case '7': return "SEARCH";
 	case '8': return "TELNET";
 	case '9': return "   BIN";
+	case 'd': return "   DOC"; /* non-standard */
 	case 'g': return "   GIF";
 	case 'h': return "  HTML"; /* non-standard */
 	case 's': return "   SND"; /* non-standard */
+	case ';': return "   VID"; /* non-standard */
 	case '+': return "MIRROR";
 	case 'I': return "   IMG";
 	case 'T': return "TN3270";
